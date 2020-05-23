@@ -39,6 +39,7 @@ typedef struct {
 volatile uint8_t i = 0;
 volatile uint16_t count = 0;
 volatile dht_reading result;
+volatile uint8_t command;
 
 void setup() {
     LED_DDR |= (1 << LED_BIT); // set LED pin as output
@@ -173,28 +174,22 @@ int main() {
     while (1) { }
 }
 
-int send_byte(uint8_t b) {
-    SPDR = b;
-    while(!(SPSR & (1<<SPIF)));
-}
-
 // get temperature and store in global variale each timer cycle
 ISR(TIMER1_COMPA_vect) {
     result = get_temp();
-    //if (result.status == 1) blink_quickly();
-    //else if (result.status == 0) blink_long();
-    //else blink_slowly();
+    if (result.status == 1) blink_quickly();
+    else if (result.status == 0) blink_long();
+    else blink_slowly();
 }
 
-// when slave select is triggered, send all the infoz
+// when slave select is triggered, send the requested infoz
 ISR (SPI_STC_vect) {
-    uint8_t command = SPDR;
-
+    command = SPDR;
     switch (command) {
-        case CHECKSUM: send_byte(result.checksum); break;
-        case TEMP_INT: send_byte(result.temperature_int); break;
-        case TEMP_DEC: send_byte(result.temperature_dec); break;
-        case HUM_INT: send_byte(result.humidity_int); break;
-        case HUM_DEC: send_byte(result.humidity_dec); break;
+        case CHECKSUM: SPDR = result.checksum; break;
+        case TEMP_INT: SPDR = result.temperature_int; break;
+        case TEMP_DEC: SPDR = result.temperature_dec; break;
+        case HUM_INT: SPDR = result.humidity_int; break;
+        case HUM_DEC: SPDR = result.humidity_dec; break;
     }
 }
