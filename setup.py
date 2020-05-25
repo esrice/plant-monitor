@@ -8,5 +8,5 @@ setuptools.setup(
         'spidev',
         'Flask',
     ],
-    scripts=['controller.py']
+    scripts=['read_monitors.py']
 )
