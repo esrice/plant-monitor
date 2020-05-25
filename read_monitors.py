@@ -26,6 +26,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print('Readings monitors at {}.'.format(datetime.datetime.now()))
 
     monitor = serial.Monitor()
     tries, reading = 0, None
@@ -46,6 +47,7 @@ def main():
     print('Successfully read DHT22.')
     print('Temperature: {:.1f}°C'.format(temperature))
     print('Relative humidity: {:.1f}%'.format(humidity))
+    print('Goodbye!')
 
     conn = sqlite3.connect(args.db_file)
     c = conn.cursor()
