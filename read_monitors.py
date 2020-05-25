@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Read all current conditions from monitors, output them to stdout, and
+write it all to the database.
+"""
 
 import argparse
 import datetime
@@ -10,7 +14,7 @@ import addie.serial as serial
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-d', '--db-file', default='addie.db',
                         help='sqlite3 database file')
     parser.add_argument('-t', '--tries', type=int, default=3,
@@ -40,10 +44,10 @@ def main():
 
     temperature, humidity = reading[0], reading[1]
     print('Successfully read DHT22.')
-    print('Temperature: {}°C'.format(temperature))
-    print('Relative humidity: {}%'.format(humidity))
+    print('Temperature: {:.1f}°C'.format(temperature))
+    print('Relative humidity: {:.1f}%'.format(humidity))
 
-    conn = sqlite.connect(args.db_file)
+    conn = sqlite3.connect(args.db_file)
     c = conn.cursor()
     c.execute('INSERT INTO dht_readings (temperature, humidity) '
               'VALUES (?, ?)', (temperature, humidity))
