@@ -7,11 +7,12 @@ function showTemperature() {
         });
 }
 
-function setTemperatureString(json) {
+function setTemperatureString(reading) {
     let temperatureP = document.getElementById('temperature');
-    timeOfLastReading = Date(json.time + ' UTC')
-    temperatureP.innerHTML = 'Temperature was ' + json.temperature.toFixed(1)
-        + '°C and humidity was ' + json.humidity.toFixed(1) + '% at '
+    let t = reading.time.split(/[- :]/);
+    let timeOfLastReading = new Date(Date.UTC(...t));
+    temperatureP.innerHTML = 'Temperature was ' + reading.temperature.toFixed(1)
+        + '°C and humidity was ' + reading.humidity.toFixed(1) + '% at '
         + timeOfLastReading + '.';
 }
 
