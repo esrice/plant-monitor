@@ -6,6 +6,8 @@ commands = {
     'temp_dec': 3,
     'hum_int': 4,
     'hum_dec': 5,
+    'moisture_high': 6,
+    'moisture_low': 7,
 }
 
 
@@ -39,12 +41,15 @@ class Monitor:
             commands['temp_dec'],
             commands['hum_int'],
             commands['hum_dec'],
+            commands['moisture_high'],
+            commands['moisture_low'],
             0
         ])
 
         checksum = results[1]
         temp_int, temp_dec = results[2:4]
         hum_int, hum_dec = results[4:6]
+        moisture_high, moisture_low = results[6:8]
 
         if checksum != ((temp_int + temp_dec + hum_int + hum_dec) & 0xFF):
             raise(BadChecksumError())
@@ -53,6 +58,7 @@ class Monitor:
         if temp_int & 0x80:
             temp *= -1
         humidity = ((hum_int << 8) | hum_dec) * 0.1
+        moisture = ((moisture_high << 8) | moisture_low) / 1024 * 100
 
-        return temp_c, humidity
+        return temp_c, humidity, moisture
 

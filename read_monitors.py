@@ -43,16 +43,17 @@ def main():
         print('Failed to read sensors after {} tries. Goodbye.'.format(tries))
         sys.exit(1)
 
-    temperature, humidity = reading[0], reading[1]
+    temperature, humidity, moisture = reading
     print('Successfully read DHT22.')
     print('Temperature: {:.1f}°C'.format(temperature))
     print('Relative humidity: {:.1f}%'.format(humidity))
+    print('Soil moisture: {:.1f}'.format(moisture))
     print('Goodbye!')
 
     conn = sqlite3.connect(args.db_file)
     c = conn.cursor()
-    c.execute('INSERT INTO dht_readings (temperature, humidity) '
-              'VALUES (?, ?)', (temperature, humidity))
+    c.execute('INSERT INTO dht_readings (temperature, humidity, moisture) '
+              'VALUES (?, ?, ?)', (temperature, humidity, moisture))
     conn.commit()
     conn.close()
 

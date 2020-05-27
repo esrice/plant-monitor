@@ -12,7 +12,8 @@ function setTemperatureString(reading) {
     let t = reading.time.split(/[- :]/);
     let timeOfLastReading = new Date(Date.UTC(...t));
     temperatureP.innerHTML = 'Temperature was ' + reading.temperature.toFixed(1)
-        + '°C and humidity was ' + reading.humidity.toFixed(1) + '% at '
+        + '°C, humidity was ' + reading.humidity.toFixed(1) + '%, and soil '
+        + 'moisture was ' + reading.moisture.toFixed(1) + ' at '
         + timeOfLastReading + '.';
 }
 
