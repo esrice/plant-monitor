@@ -12,6 +12,8 @@
 #define TEMP_DEC 3
 #define HUM_INT 4
 #define HUM_DEC 5
+#define MOISTURE_HIGH 6
+#define MOISTURE_LOW 7
 
 /**** port definitions ****/
 // LED for some simple feedback
@@ -23,6 +25,11 @@
 #define DHT_PORT PORTC
 #define DHT_PIN PINC
 #define DHT_DDR DDRC
+// soil sensor
+#define SOIL_POWER_BIT PD1
+#define SOIL_POWER_PORT PORTD
+#define SOIL_POWER_DDR DDRD
+#define SOIL_ADC 4
 // SPI
 #define DDR_SPI DDRB
 #define DD_MISO PB4
@@ -39,17 +46,30 @@ typedef struct {
 volatile uint8_t i = 0;
 volatile uint16_t count = 0;
 volatile dht_reading result;
+volatile uint8_t moisture_high, moisture_low;
 volatile uint8_t command;
 
 void setup() {
+    // set up LED
     LED_DDR |= (1 << LED_BIT); // set LED pin as output
 
+    // set up DHT22 temperature/humidity sensor
     DHT_DDR &= ~(1 << DHT_BIT); // start DHT data pin off as an input pin
     DHT_PORT |= (1 << DHT_BIT); // enable pull-up on DHT data pin
 
+    // set up soil sensor
+    // set soil sensor pin as output and start it out low
+    SOIL_POWER_DDR |= (1 << SOIL_POWER_BIT);
+    SOIL_POWER_PORT &= ~(1 << SOIL_POWER_BIT);
+    //DIDR0 |= (1 << ADC4D); // disable digital use of ADC5 to save power
+    ADCSRA |= (1<<ADEN);
+    ADMUX = (1<<REFS0); // set reference voltage to AVcc
+
+    // set up SPI
     DDR_SPI = (1 << DD_MISO); // set MISO to output
     SPCR = (1 << SPIE) | (1 << SPE); // enable SPI in slave mode w/ interrupts
 
+    // set up timer interrupt
     OCR1A = 0x231F; // set counter
     TCCR1B |= (1 << WGM12) | (1 << CS12) | (1 << CS10); // CTC and scale 1024
     TIMSK1 |= (1 << OCIE1A); // enable interrupt
@@ -79,6 +99,24 @@ void blink_long() {
     LED_PORT |= (1 << LED_BIT);
     _delay_ms(1500);
     LED_PORT &= ~(1 << LED_BIT);
+}
+
+uint16_t read_ADC(uint8_t port) {
+    //PRR &= ~(1 << PRADC); // turn off ADC power saving
+    ADMUX = (ADMUX & 0xF0) | (port & 0x0F);
+    ADCSRA |= (1 << ADEN) | (1 << ADSC); // start conversion
+    while (ADCSRA & (1 << ADSC)); // wait until conversion is complete
+    //PRR |= (1 << PRADC); // turn ADC power saving back on
+
+    return ADC;
+}
+
+uint16_t get_soil_moisture() {
+    SOIL_POWER_PORT |= (1 << SOIL_POWER_BIT); // turn soil sensor voltage on
+    _delay_ms(10);
+    uint16_t reading = read_ADC(SOIL_ADC);
+    SOIL_POWER_PORT &= ~(1 << SOIL_POWER_BIT); // turn soil sensor voltage off
+    return reading;
 }
 
 dht_reading get_temp() {
@@ -177,9 +215,12 @@ int main() {
 // get temperature and store in global variale each timer cycle
 ISR(TIMER1_COMPA_vect) {
     result = get_temp();
-    if (result.status == 1) blink_quickly();
-    else if (result.status == 0) blink_long();
-    else blink_slowly();
+
+    uint16_t moisture = get_soil_moisture();
+    moisture_high = moisture >> 8;
+    moisture_low = moisture & 0xFF;
+
+    blink_quickly();
 }
 
 // when slave select is triggered, send the requested infoz
@@ -191,5 +232,7 @@ ISR (SPI_STC_vect) {
         case TEMP_DEC: SPDR = result.temperature_dec; break;
         case HUM_INT: SPDR = result.humidity_int; break;
         case HUM_DEC: SPDR = result.humidity_dec; break;
+        case MOISTURE_HIGH: SPDR = moisture_high; break;
+        case MOISTURE_LOW: SPDR = moisture_low; break;
     }
 }
