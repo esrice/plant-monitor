@@ -1,10 +1,17 @@
 <html>
  <head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.bundle.js"
+          type=application/javascript></script>
   <script src="static/scripts/index.js" type="application/javascript"></script>
+  <link rel="stylesheet" href="static/style.css" />
  </head>
  <body>
   <h1>Hello!</h1>
   <input type="button" value="Get temperature" onclick="showTemperature();" />
   <p id="temperature">Temperature not yet loaded.</p>
+  <div class="chart-container"><canvas id="temperatureChart"></canvas></div>
+  <div class="chart-container"><canvas id="humidityChart"></canvas></div>
+  <div class="chart-container"><canvas id="moistureChart"></canvas></div>
  </body>
+ <script src="static/scripts/foot.js"></script>
 </html>
