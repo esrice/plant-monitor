@@ -8,6 +8,8 @@ commands = {
     'hum_dec': 5,
     'moisture_high': 6,
     'moisture_low': 7,
+    'light_high': 8,
+    'light_low': 9,
 }
 
 
@@ -31,6 +33,9 @@ class Monitor:
         Returns:
             temp_c: temperature in degrees C
             humidity: relative humidity in %
+            moisture: moisture in % of full conductivity (water alone
+                is ~90%, for reference)
+            light: light intensity, out of 1024
         """
         # send a series of commands and receive the results. Add an
         # arbitrary command at the end because the result for a command
@@ -43,6 +48,8 @@ class Monitor:
             commands['hum_dec'],
             commands['moisture_high'],
             commands['moisture_low'],
+            commands['light_high'],
+            commands['light_low'],
             0
         ])
 
@@ -50,6 +57,7 @@ class Monitor:
         temp_int, temp_dec = results[2:4]
         hum_int, hum_dec = results[4:6]
         moisture_high, moisture_low = results[6:8]
+        light_high, light_low = results[8:10]
 
         if checksum != ((temp_int + temp_dec + hum_int + hum_dec) & 0xFF):
             raise(BadChecksumError())
@@ -59,6 +67,7 @@ class Monitor:
             temp *= -1
         humidity = ((hum_int << 8) | hum_dec) * 0.1
         moisture = ((moisture_high << 8) | moisture_low) / 1024 * 100
+        light = ((light_high << 8) | light_low)
 
-        return temp_c, humidity, moisture
+        return temp_c, humidity, moisture, light
 

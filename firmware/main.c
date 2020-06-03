@@ -14,6 +14,8 @@
 #define HUM_DEC 5
 #define MOISTURE_HIGH 6
 #define MOISTURE_LOW 7
+#define LIGHT_HIGH 8
+#define LIGHT_LOW 9
 
 /**** port definitions ****/
 // LED for some simple feedback
@@ -30,6 +32,8 @@
 #define SOIL_POWER_PORT PORTD
 #define SOIL_POWER_DDR DDRD
 #define SOIL_ADC 4
+// light sensor
+#define LIGHT_ADC 3
 // SPI
 #define DDR_SPI DDRB
 #define DD_MISO PB4
@@ -47,6 +51,7 @@ volatile uint8_t i = 0;
 volatile uint16_t count = 0;
 volatile dht_reading result;
 volatile uint8_t moisture_high, moisture_low;
+volatile uint8_t light_high, light_low;
 volatile uint8_t command;
 
 void setup() {
@@ -109,6 +114,10 @@ uint16_t read_ADC(uint8_t port) {
     //PRR |= (1 << PRADC); // turn ADC power saving back on
 
     return ADC;
+}
+
+uint16_t get_light() {
+    return read_ADC(LIGHT_ADC);
 }
 
 uint16_t get_soil_moisture() {
@@ -220,6 +229,9 @@ ISR(TIMER1_COMPA_vect) {
     moisture_high = moisture >> 8;
     moisture_low = moisture & 0xFF;
 
+    uint16_t light = get_light();
+    light_high = light >> 8;
+    light_low = light & 0xFF;
     blink_quickly();
 }
 
@@ -234,5 +246,7 @@ ISR (SPI_STC_vect) {
         case HUM_DEC: SPDR = result.humidity_dec; break;
         case MOISTURE_HIGH: SPDR = moisture_high; break;
         case MOISTURE_LOW: SPDR = moisture_low; break;
+        case LIGHT_HIGH: SPDR = light_high; break;
+        case LIGHT_LOW: SPDR = light_low; break;
     }
 }

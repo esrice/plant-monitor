@@ -3,5 +3,6 @@ CREATE TABLE dht_readings(
     time DATETIME DEFAULT CURRENT_TIMESTAMP,
     temperature NUMERIC,
     humidity NUMERIC,
-    moisture NUMERIC
+    moisture NUMERIC,
+    light NUMERIC
 );
